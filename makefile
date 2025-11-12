@@ -1,5 +1,5 @@
 # Compiler and flags
-CC := clang 
+CC := gcc
 CFLAGS := -Wall -Wextra -Wpedantic -O2 -std=c17 -Isrc
 LDFLAGS := 
 
@@ -13,7 +13,7 @@ all: build $(TARGET)
 
 # Create build directory if it doesn't exist
 build:
-	mkdir -p build
+	@mkdir -p build
 
 # Link target in build/
 $(TARGET): $(OBJ)
