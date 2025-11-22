@@ -1,0 +1,71 @@
+#include "string_utils.h"
+
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static bool isDelimiter(const char c, char* delimiters);
+
+const char** split_string(const char* s, int* words, char* delimiters) {
+  const char** strings = NULL;
+  int cnt = 0;
+  int cur_len = 0;
+
+  // count number of "words"
+  size_t len = strlen(s);
+  for (size_t i = 0; i < len; i++) {
+    if(isDelimiter(s[i], delimiters)) {
+      if (cur_len == 0) continue;
+      cnt++;
+      cur_len = 0;
+      continue;
+    }
+    cur_len++;
+  }
+  if (cur_len > 0) cnt++;
+
+  strings = (const char**) malloc(cnt * sizeof(const char*));
+  *words = cnt;
+
+  cnt = 0;
+  cur_len = 0;
+  for (size_t i = 0; i < len; i++) {
+    if(isDelimiter(s[i], delimiters)) {
+      if (cur_len == 0) continue;
+      // copy word into resulting array
+      char* string = malloc(cur_len + 1);
+      memcpy(string, s + (i - cur_len), cur_len);
+      string[cur_len] = '\0';
+
+      strings[cnt] = string;
+      cnt++;
+      cur_len = 0;
+      continue;
+    }
+    cur_len++;
+  }
+
+  if (cur_len > 0) {
+      char* string = malloc(cur_len + 1);
+      memcpy(string, s + (len - cur_len), cur_len);
+      string[cur_len] = '\0';
+
+      strings[++cnt] = string;
+  }
+  
+  return strings;
+}
+
+static bool isDelimiter(const char c, char* delimiters) {
+  if (delimiters == NULL) {
+    delimiters = " \n";
+  }
+
+  size_t len = strlen(delimiters);
+  for (size_t i = 0; i < len; i++) {
+    if (c == delimiters[i]) return true;
+  }
+
+  return false;
+}
