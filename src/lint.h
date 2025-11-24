@@ -4,6 +4,6 @@
 #include "token.h"
 
 void run(const char* line);
-void run_file();
+void runFile(const char* file);
 
-#endif  // LINT_H_
+#endif  // LINT_H
