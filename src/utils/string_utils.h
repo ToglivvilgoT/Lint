@@ -15,4 +15,6 @@ const char** split_string(const char* s, size_t* len, char* delimiters);
  */
 bool is_delimiter(const char c, char* delimiters);
 
+char* substring(const char* src, size_t start, size_t len);
+
 #endif // STRING_UTILS_H_
