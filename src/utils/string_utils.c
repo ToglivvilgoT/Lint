@@ -79,3 +79,11 @@ char* substring(const char* src, size_t start, size_t len) {
   token_str[len] = '\0';
   return token_str;
 }
+
+bool char_in_arr(const char c, const char* arr) {
+  size_t len = sizeof(arr);
+  for (size_t i = 0; i < len; i++) {
+    if (c == arr[i]) return true;
+  }
+  return false;
+}
