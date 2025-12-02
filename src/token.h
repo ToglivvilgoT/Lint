@@ -14,7 +14,7 @@ typedef enum {
   // Single character
   LEFT_PARENTHESIS, RIGHT_PARENTHESIS, LEFT_BRACE, RIGHT_BRACE,
   MINUS, PLUS, STAR, SLASH, SEMICOLON, QUOTES, COMMA, DOT, 
-  
+
   // Comparison
   BANG, BANG_EQUAL,
   EQUAL, EQUAL_EQUAL,
@@ -32,13 +32,17 @@ typedef enum {
 } TokenType;
 
 typedef struct {
+  // error info
+  uint32_t row, column;
+
+  // only for numerical literals
+  uint32_t literal;
+
   char* token;
   TokenType type;
-  uint32_t row, column;
-  uint32_t literal;
 } Token;
 
-bool tokenize(const char* line, Vector* tokens);
+Vector tokenize(const char* line, uint32_t row);
 void print_token(Token* token);
 
 #endif  // TOKEN_H_

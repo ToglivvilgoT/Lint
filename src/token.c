@@ -1,4 +1,6 @@
 #include "token.h"
+
+#include <assert.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include "utils/string_utils.h"
@@ -8,7 +10,6 @@ static void read_literal(Token* token, const char* line, int pos);
 static void read_string(Token* token, const char* line, int pos);
 static void read_operator(Token* token, const char* line, int pos);
 static void read_punctuation(Token* token, const char* line, int pos);
-static bool char_in_arr(const char c, const char* arr);
 
 static const char* TokenType_names[];
 static const char operators[] = {'+', '-', '/', '*', '=', '!', '>', '<'};
@@ -21,7 +22,10 @@ static const char punctuators[] = {'(', ')', '{', '}', ',',};
  * 3. Strings
  * 4. Operator & Punctuation
  */
-bool tokenize(const char* line, Vector* tokens) {
+Vector tokenize(const char* line, uint32_t row) {
+  Vector tokens;
+  vec_init(&tokens);
+
   size_t len = strlen(line);
   bool valid_syntax = true;
 
@@ -29,6 +33,7 @@ bool tokenize(const char* line, Vector* tokens) {
     if (is_delimiter(line[i], NULL)) continue;
 
     Token* tok = malloc(sizeof(Token));
+    tok->token = NULL;
 
     if (isalpha(line[i]) || line[i] == '_')      read_word(tok, line, i);
     else if (isdigit(line[i]) || line[i] == '.') read_literal(tok, line, i);
@@ -45,15 +50,21 @@ bool tokenize(const char* line, Vector* tokens) {
       continue;
     }
 
-    vec_push(tokens, tok);
-    i += strlen(tok->token);
-  }
+    assert(tok->token != NULL);
 
-  return valid_syntax;
+    vec_push(&tokens, tok);
+    i += strlen(tok->token) - 1;
+  }
+  return tokens;
 }
 
-static inline char peek_next(const char* s, int pos) { 
-  return s[pos] != '\0' ? s[pos + 1] : '\0'; 
+static inline char peek_next(const char *s, int pos) {
+    if (!s || pos < 0) return '\0';
+
+    size_t len = strlen(s);
+    if ((size_t)pos + 1 >= len) return '\0';
+
+    return s[pos + 1];
 }
 
 // searches for keywords and identifiers
@@ -65,7 +76,7 @@ static void read_word(Token* tok, const char* line, int linePos) {
   int len = i - linePos + 1;
   char* token_str = substring(line, linePos, len);
 
-  // use lookup table instead?
+  // TODO use lookup table
   if      (strcmp(token_str, "fn") == 0)    tok->type = FUNCTION;
   else if (strcmp(token_str, "for") == 0)   tok->type = FOR;
   else if (strcmp(token_str, "while") == 0) tok->type = WHILE;
@@ -99,7 +110,7 @@ static void read_literal(Token* tok, const char* line, int linePos) {
 
   if (dots > 1) {
     tok->type = INVALID;
-    fprintf(stderr, "Error while reading literal (too many dots)");
+    fprintf(stderr, "Error while reading literal (too many dots)\n");
     return;
   } 
 
@@ -107,14 +118,15 @@ static void read_literal(Token* tok, const char* line, int linePos) {
   tok->type = LITERAL;
 }
 
+// TODO
 static void read_string(Token* tok, const char* line, int linePos) {
-  size_t i = linePos;
-  while (peek_next(line, i) != '"') i++;
+  size_t i = linePos + 1;
+  while (peek_next(line, i) != '"' && (peek_next(line, i) != '\0')) i++;
 
   i++;
   if (line[i] != '"') {
     tok->type = INVALID;
-    fprintf(stderr, "Error while reading string literal (no ending string quote)");
+    fprintf(stderr, "Error while reading string literal (no ending string quote)\n");
     return;
   }
   size_t len = i - linePos + 1;
@@ -124,19 +136,20 @@ static void read_string(Token* tok, const char* line, int linePos) {
 }
 
 static void read_operator(Token* tok, const char* line, int linePos) {
-  tok->type = INVALID;
+  size_t i = linePos;
+
+  while (char_in_arr(peek_next(line, i), operators)) i++;
+
+  size_t len = i - linePos + 1;
+  char* op_string = substring(line, linePos, len);
+
+  if (strcmp(op_string, "!")) tok->type = BANG;
+
+  tok->token = op_string;
 }
 
 static void read_punctuation(Token* tok, const char* line, int linePos) {
   tok->type = INVALID;
-}
-
-static bool char_in_arr(const char c, const char* arr) {
-  size_t len = sizeof(arr);
-  for (size_t i = 0; i < len; i++) {
-    if (c == arr[i]) return true;
-  }
-  return false;
 }
 
 static const char* token_type_name(TokenType type) {
@@ -153,7 +166,7 @@ static TokenType str_to_token(const char* tok_str) {
 }
 
 void print_token(Token* token) {
-    printf("Token(type=%s, lexeme=\"%s\", row=%u, col=%u)\n",
+    printf("Token(type=%s, lexeme=%s, row=%u, col=%u)\n",
         token_type_name(token->type),
         token->token,
         token->row,
