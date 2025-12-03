@@ -61,12 +61,12 @@ Vector tokenize(const char* line, uint32_t row) {
 }
 
 static inline char peek_next(const char *s, int pos) {
-    if (!s || pos < 0) return '\0';
+  if (!s || pos < 0) return '\0';
 
-    size_t len = strlen(s);
-    if ((size_t)pos + 1 >= len) return '\0';
+  size_t len = strlen(s);
+  if ((size_t)pos + 1 >= len) return '\0';
 
-    return s[pos + 1];
+  return s[pos + 1];
 }
 
 // searches for keywords and identifiers
@@ -122,7 +122,7 @@ static void read_literal(Token* tok, const char* line, int linePos) {
 }
 
 static void read_string(Token* tok, const char* line, int linePos) {
-  size_t i = linePos + 1;
+  size_t i = linePos;
   while (peek_next(line, i) != '"' && (peek_next(line, i) != '\0')) i++;
 
   i++;
