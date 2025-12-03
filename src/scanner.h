@@ -6,13 +6,18 @@
 
 #include "token.h"
 
-typedef struct {
+typedef struct TokenScanner {
   bool (*init_condition)(const char c);
   bool (*end_condition)(const char c);
-  char* lexeme;
+
+  // indicates whether the beginning character should be included
+  bool include_begin;
+
+  // indicates whether the ending character should be included or not
+  bool include_end;
 } TokenScanner;
 
-void scan(TokenScanner scanner, const char* line, 
+char* scan(TokenScanner scanner, const char* line, 
     uint32_t linePos, uint32_t row);
 
 #endif // SCANNER_H_
