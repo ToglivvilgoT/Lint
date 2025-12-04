@@ -16,5 +16,15 @@ bool string_scanner_test(void) {
   char* c = scan(string_scanner, s3, 7);
   ok = strcmp(c, "\"abc\"") == 0; free(c); if (!ok) return false;
 
+  // empty string
+  const char* s4 = "\"\" nothing";
+  char* d = scan(string_scanner, s4, 0);
+  ok = strcmp(d, "\"\"") == 0; free(d); if (!ok) return false;
+
+  // invalid string (no closing quote) should scan to end of line
+  const char* s5 = "\"incomplete string";
+  char* e = scan(string_scanner, s5, 0);
+  ok = strcmp(e, "\"incomplete string") == 0; free(e); if (!ok) return false;
+
   return true;
 }

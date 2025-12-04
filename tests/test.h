@@ -26,4 +26,5 @@ bool literal_scanner_test(void);
 bool string_scanner_test(void);
 bool op_scanner_test(void);
 bool punctuation_scanner_test(void);
+
 #endif // TEST_H_
