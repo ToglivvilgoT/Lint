@@ -10,7 +10,7 @@
 
 #define TOKEN_TYPE_COUNT INVALID + 1
 
-typedef enum {
+typedef enum TokenType {
   // Single character
   LEFT_PARENTHESIS, RIGHT_PARENTHESIS, LEFT_BRACE, RIGHT_BRACE,
   MINUS, PLUS, STAR, SLASH, SEMICOLON, QUOTES, COMMA, DOT, 
