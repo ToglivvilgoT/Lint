@@ -15,6 +15,9 @@ static const char* token_type_name(TokenType type);
 static bool is_valid_string(const char* str);
 static bool is_valid_literal(const char* str);
 
+static Scanner* get_scanner_for_prefix(const char prefix);
+static void validate_token(const Scanner* scanner, const char* lexeme, Token* tok, uint32_t row, size_t i);
+
 static const char* token_names[];
 
 // LOCAL TYPES
@@ -46,18 +49,9 @@ Vector tokenize(const char* line, uint32_t row) {
   for (size_t i = 0; i < len; i++) {
     if (is_delimiter(line[i], NULL)) continue;
 
-    Scanner* scanner = NULL;
-    // scanners[] is defined in scanner.c; iterate until a matching init_condition is found.
-    for (size_t j = 0; scanners[j] != NULL; j++) {
-      if (scanners[j]->init_condition(line[i])) {
-        scanner = (Scanner*)scanners[j];
-        break;
-      }
-    }
-
+    Scanner* scanner = get_scanner_for_prefix(line[i]);
     if (scanner == NULL) {
-      printf("No suitable scanner found! (unrecognized starting character)\n");
-      printf("at column %lu, row %d\n", i, row);
+      printf("Unrecognized character at column %lu, row %d\n", i, row);
       continue;
     }
 
@@ -67,25 +61,11 @@ Vector tokenize(const char* line, uint32_t row) {
     *tok = (Token){ .type = lookup_token_type(lexeme), 
       .token = lexeme, .column = i, .row = row };
 
-    // valid token found directly
-    if (tok->type != INVALID) goto insert_token;
-
-    // handle strings, literals, identifiers dynamically
-    if (scanner == &string_scanner) {
-      if (!is_valid_string(lexeme)) {
-        fprintf(stderr, "Error: Unterminated string at row %u, col %u\n", row, i);
-      }
-      tok->type = STRING;
-    } else if (scanner == &literal_scanner) {
-      if (!is_valid_literal(lexeme)) {
-        fprintf(stderr, "Error: Invalid literal format at row %u, col %u\n", row, i);
-      }
-      tok->type = LITERAL;
-    } else if (scanner == &word_scanner) {
-      tok->type = IDENTIFIER;
+    // handle strings, literals, identifiers dynamically (defaulted to INVALID since we don't know yet)
+    if (tok->type == INVALID) {
+      validate_token(scanner, lexeme, tok, row, i);
     }
     
-insert_token:
     assert(tok->token != NULL);
     vec_push(&tokens, tok);
     i += strlen(tok->token) - 1;
@@ -104,6 +84,35 @@ void print_token(Token* token) {
 
 // PRIVATE FUNCTIONS
 // =============================================================================
+
+static Scanner* get_scanner_for_prefix(const char prefix ) {
+  for (size_t j = 0; scanners[j] != NULL; j++) {
+    Scanner* scanner = (Scanner*)scanners[j];
+    if (scanner->init_condition(prefix)) {
+      return scanner;
+    }
+  }
+  return NULL;
+}
+
+static void validate_token(const Scanner* scanner, const char* lexeme, Token* tok, uint32_t row, size_t i) {
+  if (scanner == &string_scanner) {
+    if (!is_valid_string(lexeme)) {
+      fprintf(stderr, "Error: Unterminated string at row %u, col %zu\n", row, i);
+    }
+    tok->type = STRING;
+  } else if (scanner == &literal_scanner) {
+    if (!is_valid_literal(lexeme)) {
+      fprintf(stderr, "Error: Invalid literal format at row %u, col %zu\n", row, i);
+    }
+    tok->type = LITERAL;
+  } else if (scanner == &word_scanner) {
+    // word scanner is guaranteed to produce valid identifiers
+    tok->type = IDENTIFIER;
+  } else {
+    assert(false && "Unhandled scanner type");
+  }
+}
 
 static bool is_valid_string(const char* str) {
   size_t len = strlen(str);
