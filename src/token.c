@@ -5,6 +5,7 @@
 #include <ctype.h>
 
 #include "scanner.h"
+#include "utils/error.h"
 #include "utils/string_utils.h"
 
 // FORWARDING
@@ -15,7 +16,7 @@ static const char* token_type_name(TokenType type);
 static bool is_valid_string(const char* str);
 static bool is_valid_literal(const char* str);
 
-static Scanner* get_scanner_for_prefix(const char prefix);
+static Scanner* get_scanner_from_prefix(const char prefix);
 static Token* construct_token(const char* lexeme, Scanner* scanner, uint32_t row, size_t i);
 
 static const char* token_names[];
@@ -41,14 +42,15 @@ Vector tokenize(const char* line, uint32_t row) {
   for (size_t i = 0; i < len; i++) {
     if (is_delimiter(line[i], NULL)) continue;
 
-    Scanner* scanner = get_scanner_for_prefix(line[i]);
+    Scanner* scanner = get_scanner_from_prefix(line[i]);
     if (scanner == NULL) {
-      printf("Unrecognized character at column %lu, row %d\n", i, row);
+      error_log("Unrecognized character at column %lu, row %d\n", i, row);
       continue;
     }
 
     const char* lexeme = scan(*scanner, line, i);
 
+    // constructs token and validate if needed, handles errors internally
     Token* tok = construct_token(lexeme, scanner, row, i);
 
     vec_push(&tokens, tok);
@@ -69,7 +71,7 @@ void print_token(Token* token) {
 // PRIVATE FUNCTIONS
 // =============================================================================
 
-static Scanner* get_scanner_for_prefix(const char prefix ) {
+static Scanner* get_scanner_from_prefix(const char prefix ) {
   for (size_t j = 0; scanners[j] != NULL; j++) {
     Scanner* scanner = (Scanner*)scanners[j];
     if (scanner->init_condition(prefix)) {
@@ -82,12 +84,12 @@ static Scanner* get_scanner_for_prefix(const char prefix ) {
 static void validate_token(const Scanner* scanner, const char* lexeme, Token* tok, uint32_t row, size_t i) {
   if (scanner == &string_scanner) {
     if (!is_valid_string(lexeme)) {
-      fprintf(stderr, "Error: Unterminated string at row %u, col %zu\n", row, i);
+      error_log("Error: Unterminated string at row %u, col %zu\n", row, i);
     }
     tok->type = STRING;
   } else if (scanner == &literal_scanner) {
     if (!is_valid_literal(lexeme)) {
-      fprintf(stderr, "Error: Invalid literal format at row %u, col %zu\n", row, i);
+      error_log("Error: Invalid literal format at row %u, col %zu\n", row, i);
     }
     tok->type = LITERAL;
   } else if (scanner == &word_scanner) {

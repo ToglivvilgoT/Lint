@@ -5,6 +5,7 @@
 #include "scanners/test_scanner.h"
 #include "token/test_token.h"
 #include "misc/test_utils.h"
+#include "utils/error.h"
 
 void runTests(void) {
   printf("\n");
@@ -23,18 +24,23 @@ void runTests(void) {
     if (suite_passed == suites[s].count) {
       passed_suites++;
     }
+    printf("\n");
   }
 
-  printf("\nSuites passed: %zu/%zu\n", passed_suites, num_suites);
+  printf("Suites passed: %zu/%zu\n", passed_suites, num_suites);
   if (passed_suites == num_suites)
     printf("🎉 %s 🎉\n", color("All suites passed!", ColorGRN));
   else
     printf("%s\n", color("Some suites failed :/", ColorRED));
+  
+  printf("\n");
 }
 
 int main(void) {
   // Ensure deterministic interleaving of stdout (colored) vs stderr (errors)
   setvbuf(stdout, NULL, _IONBF, 0);
+  // Disable error logging during unit tests for clean output
+  error_set_enabled(false);
   runTests();
   return 0;
 }
