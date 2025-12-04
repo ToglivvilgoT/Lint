@@ -16,7 +16,7 @@ static bool is_valid_string(const char* str);
 static bool is_valid_literal(const char* str);
 
 static Scanner* get_scanner_for_prefix(const char prefix);
-static void validate_token(const Scanner* scanner, const char* lexeme, Token* tok, uint32_t row, size_t i);
+static Token* construct_token(const char* lexeme, Scanner* scanner, uint32_t row, size_t i);
 
 static const char* token_names[];
 
@@ -32,14 +32,6 @@ static LookupEntry token_lookup[];
 // PUBLIC FUNCTIONS
 // =============================================================================
 
-/*
- * Tokenize searches for tokens in the following order:
- * 1. Keywords & Identifiers 
- * 2. Literals
- * 3. Strings
- * 4. Operators
- * 5. Punctuation
- */
 Vector tokenize(const char* line, uint32_t row) {
   Vector tokens;
   vec_init(&tokens);
@@ -57,16 +49,8 @@ Vector tokenize(const char* line, uint32_t row) {
 
     const char* lexeme = scan(*scanner, line, i);
 
-    Token* tok = malloc(sizeof(Token));
-    *tok = (Token){ .type = lookup_token_type(lexeme), 
-      .token = lexeme, .column = i, .row = row };
+    Token* tok = construct_token(lexeme, scanner, row, i);
 
-    // handle strings, literals, identifiers dynamically (defaulted to INVALID since we don't know yet)
-    if (tok->type == INVALID) {
-      validate_token(scanner, lexeme, tok, row, i);
-    }
-    
-    assert(tok->token != NULL);
     vec_push(&tokens, tok);
     i += strlen(tok->token) - 1;
   }
@@ -112,6 +96,18 @@ static void validate_token(const Scanner* scanner, const char* lexeme, Token* to
   } else {
     assert(false && "Unhandled scanner type");
   }
+}
+
+static Token* construct_token(const char* lexeme, Scanner* scanner, uint32_t row, size_t i) {
+  Token* tok = malloc(sizeof(Token));
+  *tok = (Token){ .type = lookup_token_type(lexeme), 
+    .token = lexeme, .column = i, .row = row };
+
+  // handle strings, literals, identifiers dynamically (defaulted to INVALID since we don't know yet)
+  if (tok->type == INVALID) {
+    validate_token(scanner, lexeme, tok, row, i);
+  }
+  return tok;
 }
 
 static bool is_valid_string(const char* str) {
