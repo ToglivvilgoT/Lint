@@ -1,12 +1,23 @@
 #include "test.h"
 
-static int run_case(const char* name, bool (*fn)()) {
+#define RED   "\x1B[31m"
+#define GRN   "\x1B[32m"
+#define YEL   "\x1B[33m"
+#define BLU   "\x1B[34m"
+#define MAG   "\x1B[35m"
+#define CYN   "\x1B[36m"
+#define WHT   "\x1B[37m"
+#define RESET "\x1B[0m"
+
+typedef bool (*test_fn_t)(void);
+
+static int run_case(const char* name, test_fn_t fn) {
   bool ok = fn();
   if (ok) {
-    printf("PASS: %s\n", name);
+    printf(GRN "PASS: %s\n" RESET, name);
     return 1;
   } else {
-    printf("FAIL: %s\n", name);
+    printf(RED "FAIL: %s\n" RESET, name);
     return 0;
   }
 }
@@ -15,7 +26,7 @@ void runTests(void) {
   int total = 0;
   int passed = 0;
 
-  bool (*tests[])() = {
+  test_fn_t tests[] = {
     split_string_test,
     word_scanner_test,
     literal_scanner_test,
@@ -33,7 +44,7 @@ void runTests(void) {
     "punctuation_scanner",
   };
 
-  size_t num_tests = sizeof(tests) / sizeof(tests[0]);
+  size_t num_tests = sizeof(tests) / sizeof(test_fn_t);
   for (size_t i = 0; i < num_tests; i++) {
     total++;
     passed += run_case(test_names[i], tests[i]);
