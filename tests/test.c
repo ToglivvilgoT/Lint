@@ -15,9 +15,11 @@ static int run_case(const char* name, test_fn_t fn) {
   bool ok = fn();
   if (ok) {
     printf(GRN "PASS: %s\n" RESET, name);
+    fflush(stdout);
     return 1;
   } else {
     printf(RED "FAIL: %s\n" RESET, name);
+    fflush(stdout);
     return 0;
   }
 }
@@ -33,6 +35,9 @@ void runTests(void) {
     string_scanner_test,
     op_scanner_test,
     punctuation_scanner_test,
+    tokenizer_test,
+    tokenizer_error_cases_test,
+    tokenizer_edge_cases_test,
   };
 
   const char* test_names[] = {
@@ -42,6 +47,9 @@ void runTests(void) {
     "string_scanner",
     "op_scanner",
     "punctuation_scanner",
+    "tokenizer",
+    "tokenizer_error_cases",
+    "tokenizer_edge_cases",
   };
 
   size_t num_tests = sizeof(tests) / sizeof(test_fn_t);
@@ -54,6 +62,8 @@ void runTests(void) {
 }
 
 int main(void) {
+  // Ensure deterministic interleaving of stdout (colored) vs stderr (errors)
+  setvbuf(stdout, NULL, _IONBF, 0);
   runTests();
   return 0;
 }

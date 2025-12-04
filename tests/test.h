@@ -8,6 +8,7 @@
 
 #include "scanner.h"
 #include "utils/string_utils.h"
+#include "token.h"
 
 bool split_string_test(void);
 bool word_scanner_test(void);
@@ -26,5 +27,10 @@ bool literal_scanner_test(void);
 bool string_scanner_test(void);
 bool op_scanner_test(void);
 bool punctuation_scanner_test(void);
+
+// tokenizer tests
+bool tokenizer_test(void);
+bool tokenizer_error_cases_test(void);
+bool tokenizer_edge_cases_test(void);
 
 #endif // TEST_H_
